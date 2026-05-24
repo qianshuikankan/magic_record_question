@@ -212,6 +212,37 @@
     padding: 40px;
     color: #c62828;
   }
+
+  @media (max-width: 640px) {
+    body { font-size: 14px; padding: 10px; }
+    .container { padding: 0 14px 20px; }
+    h1 { font-size: 1.4em; margin: 0 -14px 6px; padding: 12px 0; }
+    .subtitle { font-size: 0.9em; margin-bottom: 16px; }
+    .question-card { padding: 14px 16px; }
+    .q-text { font-size: 0.95em; }
+    .option-label { font-size: 0.88em; padding: 8px 10px; }
+    .btn { padding: 10px 24px; font-size: 0.95em; }
+    .score-number { font-size: 2.4em; }
+    .score-text { font-size: 0.95em; }
+    .q-number { width: 22px; height: 22px; font-size: 0.72em; }
+  }
+
+  #live2d-container {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 300px;
+    height: 520px;
+    z-index: 1000;
+    cursor: pointer;
+  }
+  #live2d-canvas {
+    width: 100%;
+    height: 100%;
+  }
+  @media (max-width: 640px) {
+    #live2d-container { width: 160px; height: 300px; }
+  }
 </style>
 </head>
 <body>
@@ -232,6 +263,54 @@
   </div>
 </div>
 
+<div id="live2d-container">
+  <canvas id="live2d-canvas"></canvas>
+</div>
+
+<script>var process = { env: { NODE_ENV: 'production' }, browser: true };</script>
+<script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.3/dist/pixi.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@hazart-pkg/live2d-core@1.0.1/live2dcubismcore.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.5.0-beta/dist/cubism4.min.js"></script>
+<script>
+async function initLive2D() {
+  while (!window.PIXI || !window.Live2DCubismCore || !window.PIXI.live2d) await new Promise(r => setTimeout(r, 50));
+
+  const canvas = document.getElementById('live2d-canvas');
+  const app = new PIXI.Application({
+    width: 300, height: 520,
+    backgroundAlpha: 0,
+    antialias: true,
+    view: canvas,
+  });
+
+  const Live2DModel = PIXI.live2d.Live2DModel;
+  const model = await Live2DModel.from('./102001/model.model3.json');
+
+  model.anchor.set(0.5, 1);
+  model.position.set(app.screen.width / 2, app.screen.height);
+  model.scale.set(0.15);
+  app.stage.addChild(model);
+
+  function playRandom() {
+    const mgr = model.internalModel.motionManager;
+    const defs = mgr.definitions;
+    const names = Object.keys(defs);
+    if (!names.length) return;
+    const group = names[Math.floor(Math.random() * names.length)];
+    model.motion(group);
+
+    const emgr = mgr.expressionManager;
+    if (emgr && emgr.definitions && emgr.definitions.length) {
+      model.expression(Math.floor(Math.random() * emgr.definitions.length));
+    }
+  }
+
+  canvas.addEventListener('click', playRandom);
+  setInterval(playRandom, 30000);
+}
+
+initLive2D().catch(console.error);
+</script>
 <script>
 const DIFFICULTY = [
   { file: '1.json', count: 10, points: 1 },
