@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>魔法纪录 知识问答</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #0a1a2e url('https://magireco.moe/skins/Yttrium/images/bg.jpg') fixed center/cover;
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+    font-size: 17px;
+    line-height: 1.5;
+  }
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    background: rgba(255,255,255,0.92);
+    border-radius: 14px;
+    padding: 16px 36px 36px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+    backdrop-filter: blur(4px);
+  }
+  h1 {
+    text-align: center;
+    font-size: 2.2em;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 -36px 10px;
+    padding: 18px 0;
+    background: linear-gradient(to bottom, #e4f5fc 0%, #a9dff7 46%, #91d4ee 63%, #6fc4e6 80%, #5db0d3 100%);
+    text-shadow: 0 0 4px rgba(50,130,190,0.6);
+    letter-spacing: 2px;
+    border-radius: 14px 14px 0 0;
+  }
+  .subtitle {
+    text-align: center;
+    color: #6688aa;
+    font-size: 1.05em;
+    margin-bottom: 24px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #d0dce8;
+  }
+  .question-card {
+    background: #fdfdfd;
+    border: 1px solid #c8d8e8;
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    transition: box-shadow 0.2s;
+  }
+  .question-card:hover {
+    box-shadow: 0 2px 10px rgba(30,80,140,0.12);
+  }
+  .q-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .q-number {
+    background: linear-gradient(to bottom, #5b9bd5, #337ab7);
+    color: #fff;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8em;
+    font-weight: 700;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .q-text {
+    font-size: 1.05em;
+    line-height: 1.5;
+    font-weight: 500;
+    color: #222;
+  }
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  @media (max-width: 620px) {
+    .options { grid-template-columns: 1fr; }
+  }
+  .option-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border: 1px solid #c8d8e8;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 1em;
+    line-height: 1.45;
+    background: #fff;
+  }
+  .option-label:hover {
+    border-color: #5b9bd5;
+    background: #f0f6fc;
+  }
+  .option-label input[type="radio"] {
+    accent-color: #337ab7;
+    flex-shrink: 0;
+  }
+  .option-label.correct {
+    border-color: #4caf50;
+    background: #e8f5e9;
+  }
+  .option-label.wrong {
+    border-color: #f44336;
+    background: #ffebee;
+  }
+  .option-label.disabled {
+    cursor: default;
+    opacity: 0.85;
+  }
+  .actions {
+    text-align: center;
+    margin: 24px 0 8px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 14px 40px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: linear-gradient(to bottom, #5b9bd5, #337ab7);
+    color: #fff;
+    box-shadow: 0 1px 4px rgba(30,80,140,0.3);
+  }
+  .btn-primary:hover { background: linear-gradient(to bottom, #6ca8dd, #4288c7); }
+  .btn-primary:disabled {
+    background: #bbb;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  .btn-secondary {
+    background: #fff;
+    color: #337ab7;
+    border: 2px solid #337ab7;
+  }
+  .btn-secondary:hover { background: #f0f6fc; }
+  .btn-secondary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .score-panel {
+    text-align: center;
+    background: #fcfaff;
+    border: 2px solid #c8d8e8;
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 20px;
+    display: none;
+  }
+  .score-panel.show { display: block; }
+  .score-number {
+    font-size: 3.5em;
+    font-weight: 800;
+    color: #337ab7;
+    text-shadow: 0 1px 3px rgba(30,80,140,0.15);
+  }
+  .score-text { font-size: 1.05em; color: #555; margin-top: 4px; }
+  .result-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-top: 10px;
+  }
+  .result-badge.ok { background: #e8f5e9; color: #2e7d32; }
+  .result-badge.ng { background: #ffebee; color: #c62828; }
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6688aa;
+    font-size: 1.1em;
+  }
+  .loading .spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid #d0dce8;
+    border-top-color: #337ab7;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-msg {
+    text-align: center;
+    padding: 40px;
+    color: #c62828;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>魔法纪录 奇迹问答</h1>
+  <p class="subtitle">共 40 题，满分 100 分</p>
+
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <div>加载题目中...</div>
+  </div>
+  <div id="error" class="error-msg" style="display:none"></div>
+  <div id="quiz" style="display:none"></div>
+
+  <div class="actions" id="actions" style="display:none">
+    <button class="btn btn-primary" id="submitBtn" onclick="submitQuiz()">提交答案</button>
+    <button class="btn btn-secondary" id="reviewBtn" onclick="toggleReview()" disabled>查看错题</button>
+  </div>
+</div>
+
+<script>
+const DIFFICULTY = [
+  { file: '1.json', count: 10, points: 1 },
+  { file: '2.json', count: 15, points: 3 },
+  { file: '3.json', count: 15, points: 3 },
+];
+
+let questions = [];
+let submitted = false;
+let score = 0;
+let showReview = false;
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+async function loadAll() {
+  try {
+    const all = await Promise.all(DIFFICULTY.map(d =>
+      fetch(d.file).then(r => { if (!r.ok) throw new Error(`加载 ${d.file} 失败`); return r.json(); })
+    ));
+    questions = [];
+    all.forEach((pool, idx) => {
+      const d = DIFFICULTY[idx];
+      const picked = shuffle([...pool]).slice(0, d.count);
+      picked.forEach(q => questions.push({ ...q, points: d.points, difficulty: idx }));
+    });
+    questions = shuffle(questions);
+    render();
+  } catch (e) {
+    document.getElementById('loading').style.display = 'none';
+    const el = document.getElementById('error');
+    el.style.display = 'block';
+    el.textContent = '加载失败：' + e.message;
+  }
+}
+
+function render() {
+  document.getElementById('loading').style.display = 'none';
+  const quiz = document.getElementById('quiz');
+  quiz.style.display = 'block';
+  document.getElementById('actions').style.display = 'flex';
+
+  let html = '';
+  questions.forEach((q, i) => {
+    html += `
+      <div class="question-card" id="q-${i}">
+        <div class="q-header">
+          <span class="q-number">${i + 1}</span>
+          <span class="q-text">${escapeHtml(q.question)}</span>
+        </div>
+        <div class="options" id="opts-${i}">
+          ${q.options.map((opt, oi) => `
+            <label class="option-label" id="opt-${i}-${oi}">
+              <input type="radio" name="q${i}" value="${oi}" onchange="onSelect(${i})">
+              <span>${escapeHtml(opt)}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>`;
+  });
+  quiz.innerHTML = html;
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function onSelect(idx) {
+  if (submitted) return;
+  const next = document.getElementById(`q-${idx + 1}`);
+  if (next) {
+    next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function submitQuiz() {
+  if (submitted) return;
+
+  const unanswered = [];
+  questions.forEach((q, i) => {
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    if (!sel) unanswered.push(i + 1);
+  });
+
+  if (unanswered.length > 0) {
+    alert(`还有 ${unanswered.length} 题未作答（第 ${unanswered.join('、')} 题）`);
+    return;
+  }
+
+  submitted = true;
+  document.getElementById('submitBtn').disabled = true;
+
+  score = 0;
+  let correctCount = 0;
+
+  questions.forEach((q, i) => {
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    const selectedIdx = parseInt(sel.value);
+    const isCorrect = q.options[selectedIdx] === q.answer;
+
+    if (isCorrect) {
+      score += q.points;
+      correctCount++;
+    }
+
+    // Mark correct answer
+    const correctOptIdx = q.options.indexOf(q.answer);
+    document.getElementById(`opt-${i}-${correctOptIdx}`).classList.add('correct', 'disabled');
+
+    if (!isCorrect) {
+      document.getElementById(`opt-${i}-${selectedIdx}`).classList.add('wrong', 'disabled');
+    }
+
+    // Disable all inputs
+    document.querySelectorAll(`input[name="q${i}"]`).forEach(el => el.disabled = true);
+  });
+
+  // Show score panel
+  const panel = document.createElement('div');
+  panel.className = 'score-panel show';
+  panel.id = 'score-panel';
+  panel.innerHTML = `
+    <div class="score-number">${score}</div>
+    <div class="score-text">满分 100 分 · 答对 ${correctCount} / 40 题</div>
+    <div class="result-badge ${score >= 60 ? 'ok' : 'ng'}">${score >= 60 ? '合格' : '不合格'}</div>
+  `;
+  const quiz = document.getElementById('quiz');
+  quiz.parentNode.insertBefore(panel, quiz);
+
+  document.getElementById('reviewBtn').disabled = false;
+  document.getElementById('reviewBtn').textContent = '查看错题';
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleReview() {
+  showReview = !showReview;
+  const btn = document.getElementById('reviewBtn');
+  btn.textContent = showReview ? '查看全部' : '查看错题';
+
+  questions.forEach((q, i) => {
+    const card = document.getElementById(`q-${i}`);
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    const selectedIdx = sel ? parseInt(sel.value) : -1;
+    const isCorrect = selectedIdx >= 0 && q.options[selectedIdx] === q.answer;
+
+    if (showReview) {
+      // Only wrong answers
+      card.style.display = isCorrect ? 'none' : '';
+    } else {
+      card.style.display = '';
+    }
+  });
+}
+
+loadAll();
+</script>
+</body>
+</html>
